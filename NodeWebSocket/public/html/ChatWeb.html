@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+    <title>Socket.IO chat</title>
+    <style type="text/css">
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 13px Helvetica, Arial; }
+        #form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+        #form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+        #form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+        #messages { list-style-type: none; margin: 0; padding: 0; }
+        #messages li { padding: 5px 10px; }
+        #messages li:nth-child(odd) { background: #eee; }
+        #status span {color:red;width: 400px;}
+    </style>
+    <!--<script src="../node_modules/socket.io/node_modules/socket.io-client/socket.io.js"></script>-->
+    <script src="https://cdn.socket.io/socket.io-1.0.6.js" type="text/javascript"></script>
+    <script src="http://lib.sinaapp.com/js/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var socket = io();
+        var nickName = new Date().getMilliseconds();
+        socket.emit('chat status', "["+nickName+"] connected");
+        function aa() {
+            var word = $('#m').val();
+            if (word) {
+                socket.emit('chat message', "[" + nickName + "]" + word);
+                $('#m').val('');
+            }
+        }
+        socket.on('chat message', function(msg){
+            $('#messages').append($('<li>').text(msg));
+        });
+        socket.on('chat status', function(msg){
+            if(!msg.contains(nickName)) {
+                var currentStatus = $("#status").length;
+                if(currentStatus){
+                    $("#status span").remove();
+                }
+                $('#status').append($('<span>').text(msg));
+            }
+        });
+        $(window).unload(function(){
+            socket.emit('chat status', "[" + nickName + "] disconnected");
+            socket.close();
+        });
+        function sendStatus(){
+            socket.emit('chat status', "["+nickName+"]:typing...");
+        }
+        $(function(){
+            $("#m").keydown(function(e){
+                if(e.keyCode == 13){
+                    aa();
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+<div id="status">
+</div>
+<div>
+    <ul id="messages"></ul>
+</div>
+<div id="form">
+    <input id="m" type="text" onkeyup="sendStatus()" /><button id="btn" onclick="aa()">Send</button>
+</div>
+</body>
+</html>
